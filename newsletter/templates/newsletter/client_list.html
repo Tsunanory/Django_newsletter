@@ -1,0 +1,41 @@
+{% extends 'newsletter/base.html' %}
+{% load my_tags %}
+
+{% block content %}
+<div class="col-12 mb-5">
+    {% if user.is_authenticated %}
+     <h4 class="card-title pricing-card-title">Добавить:</h4>
+    <a class="btn btn-outline-primary" href="{% url 'newsletter:create_newsletter' %}">Рассылку</a>
+    <a class="btn btn-outline-primary" href="{% url 'newsletter:create_client' %}">Клиента</a>
+    <a class="btn btn-outline-primary" href="{% url 'newsletter:create_message' %}">Сообщение</a>
+    {% endif %}
+</div>
+{% for client in object_list %}
+<div class="col-8">
+    <div class="card mb-4 box-shadow">
+        <div class="card-header">
+            <h4 class="my-0 font-weight-normal">{{ client.full_name }}</h4>
+        </div>
+        <div class="card-body">
+            <h1 class="card-title pricing-card-title">{{ client }}</h1>
+            <ul class="list-unstyled mt-3 mb-4 text-start m-3">
+                <li style="text-align: center;">{{ client.comment|truncatechars:100 }}</li>
+                {% for client in newsletter.clients.all %}
+                <li style="text-align: center;">{{ client }}</li>
+                {% endfor %}
+
+
+            </ul>
+            <div class="btn-group">
+                <a href="{% url 'newsletter:client_page' client.id %}" type="button"
+                   class="btn btn-lg btn-block btn-outline-primary">Просмотреть</a>
+                <a href="{% url 'newsletter:update_client' client.id %}" type="button"
+                   class="btn btn-lg btn-block btn-outline-primary">Изменить</a>
+                <a href="{% url 'newsletter:delete_client' client.id %}" type="button"
+                   class="btn btn-lg btn-block btn-outline-primary">Удалить</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

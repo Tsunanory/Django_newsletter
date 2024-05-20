@@ -1,0 +1,31 @@
+{% extends 'newsletter/base.html' %}
+
+{% block content %}
+<div class="container">
+    <form class="row" method="post" enctype="multipart/form-data">
+        <div class="col-3"></div>
+        <div class="col-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        Вход
+                    </h3>
+                    <div class="card-body">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        Войти
+                    </button>
+                    <a class="btn btn-outline-primary" href="{% url 'users:registration' %}">Регистрация</a>
+                    <a class="btn btn-outline-primary" href="{% url 'users:reset_password' %}">Забыли пароль?</a>
+                </div>
+            </div>
+        </div>
+</div>
+</div>
+</form>
+</div>
+
+
+{% endblock %}
