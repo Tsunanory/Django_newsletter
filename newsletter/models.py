@@ -1,4 +1,8 @@
+import pytz
 from django.db import models
+from django_apscheduler.models import DjangoJob
+from .scheduler import send_newsletter, scheduler
+
 NULLABLE = {'null': True, 'blank': True}
 
 
@@ -44,9 +48,30 @@ class Newsletter(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name='сообщение')
     clients = models.ManyToManyField(Client, verbose_name='клиенты')
 
-    class Meta:
-        verbose_name = 'рассылка'
-        verbose_name_plural = 'рассылки'
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.status == 'P':
+            job_id = f'send-newsletter-{self.id}'
+
+            try:
+                existing_job = DjangoJob.objects.get(id=job_id)
+                scheduler.remove_job(job_id)
+                existing_job.delete()
+            except DjangoJob.DoesNotExist:
+                pass
+
+            scheduler.add_job(
+                send_newsletter,
+                trigger='date',
+                run_date=self.initial.astimezone(pytz.UTC),
+                args=[self.id],
+                id=job_id,
+                replace_existing=True
+            )
+
+    class Meta:                                
+        verbose_name = 'рассылка'              
+        verbose_name_plural = 'рассылки'       
 
     def __str__(self):
         return str(self.initial)
