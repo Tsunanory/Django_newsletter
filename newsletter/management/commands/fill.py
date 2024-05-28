@@ -1,12 +1,15 @@
 from django.core.management import BaseCommand, call_command
-
-from newsletter.models import Product, Category
+from newsletter.models import Newsletter, Message, Client, Attempt
+from users.models import User
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
 
-        Category.objects.all().delete()
-        Product.objects.all().delete()
+        Newsletter.objects.all().delete()
+        Message.objects.all().delete()
+        Client.objects.all().delete()
+        User.objects.all().delete()
+        Attempt.objects.all().delete()
 
-        call_command('loaddata', 'fixtures/catalog_data.json')
+        call_command('loaddata', 'fixtures/newsletter_app.json')

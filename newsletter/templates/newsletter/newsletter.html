@@ -12,6 +12,14 @@
                 <h1 class="card-title pricing-card-title">{{ object.message.topic }}</h1>
                 <ul class="list-unstyled mt-3 mb-4 text-start m-3">
                     <li style="text-align: center;">{{ object.message.content }}</li>
+                    <br>
+                    {% if user.is_authenticated and user == newsletter.user %}
+                    {% for client in newsletter.clients.all %}
+                    <li style="text-align: center;">{{ client }}</li>
+                    {% endfor %}
+                    {% endif %}
+                    <li style="text-align: center;">
+                    </li>
                 </ul>
                 <a href="{% url 'newsletter:update_newsletter' newsletter.id %}" type="button"
                    class="btn btn-lg btn-block btn-outline-primary">Изменить</a>

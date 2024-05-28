@@ -1,7 +1,6 @@
 from django import forms
-from django.core.exceptions import ValidationError
-
 from newsletter.models import Newsletter, Client, Message
+from django.utils import timezone
 
 
 class FormStyleMixin:
@@ -15,9 +14,15 @@ class FormStyleMixin:
 
 
 class NewsletterForm(FormStyleMixin, forms.ModelForm):
+    initial = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        input_formats=['%Y-%m-%dT%H:%M'],
+    )
+
     class Meta:
         model = Newsletter
-        exclude = ('status',)
+        exclude = ('status', 'user', )
+
         widgets = {
             'initial': forms.DateTimeInput(attrs={
                 'type': 'datetime-local',
@@ -29,14 +34,28 @@ class NewsletterForm(FormStyleMixin, forms.ModelForm):
             'clients': forms.SelectMultiple(attrs={'class': 'form-control'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user')
+        super().__init__(*args, **kwargs)
+        self.fields['clients'].queryset = Client.objects.filter(user=user)
+        self.fields['message'].queryset = Message.objects.filter(user=user)
+
 
 class ClientForm(FormStyleMixin, forms.ModelForm):
     class Meta:
         model = Client
-        fields = '__all__'
+        exclude = ('user', )
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
 
 
 class MessageForm(FormStyleMixin, forms.ModelForm):
     class Meta:
         model = Message
-        fields = '__all__'
+        exclude = ('user', )
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)

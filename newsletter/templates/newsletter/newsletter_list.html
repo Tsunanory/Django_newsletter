@@ -4,7 +4,7 @@
 {% block content %}
 <div class="col-12 mb-5">
     {% if user.is_authenticated %}
-     <h4 class="card-title pricing-card-title">Добавить:</h4>
+    <h4 class="card-title pricing-card-title">Добавить:</h4>
     <a class="btn btn-outline-primary" href="{% url 'newsletter:create_newsletter' %}">Рассылку</a>
     <a class="btn btn-outline-primary" href="{% url 'newsletter:create_client' %}">Клиента</a>
     <a class="btn btn-outline-primary" href="{% url 'newsletter:create_message' %}">Сообщение</a>
@@ -21,19 +21,25 @@
             <ul class="list-unstyled mt-3 mb-4 text-start m-3">
                 <li style="text-align: center;">{{ newsletter.message.content|truncatechars:100 }}</li>
                 <br>
+                {% if user.is_authenticated and user == newsletter.user %}
                 {% for client in newsletter.clients.all %}
                 <li style="text-align: center;">{{ client }}</li>
                 {% endfor %}
+                {% endif %}
 
 
             </ul>
             <div class="btn-group">
+                {% if user == newsletter.user or perms.newsletter.can_view_any_newsletter %}
                 <a href="{% url 'newsletter:newsletter_page' newsletter.id %}" type="button"
                    class="btn btn-lg btn-block btn-outline-primary">Просмотреть</a>
+                {% endif %}
+                {% if user == newsletter.user %}
                 <a href="{% url 'newsletter:update_newsletter' newsletter.id %}" type="button"
                    class="btn btn-lg btn-block btn-outline-primary">Изменить</a>
                 <a href="{% url 'newsletter:delete_newsletter' newsletter.id %}" type="button"
                    class="btn btn-lg btn-block btn-outline-primary">Удалить</a>
+                {% endif %}
             </div>
         </div>
     </div>

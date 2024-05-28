@@ -2,10 +2,29 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
 from django.urls import reverse_lazy
+import pytz
 from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView, DeleteView
 
 from newsletter.forms import NewsletterForm, ClientForm, MessageForm
-from newsletter.models import Newsletter, Client, Message
+from newsletter.models import Newsletter, Client, Message, Attempt
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
+class UserIsOwnerOrHasPermissionMixin:
+    permission_required = None
+
+    def test_func(self):
+        obj = self.get_object()
+        user = self.request.user
+        if user == obj.user or user.has_perm(self.permission_required):
+            return True
+        return False
+
+    def handle_no_permission(self):
+        raise PermissionDenied("You do not have permission to perform this action.")
 
 
 class ContactsTemplateView(LoginRequiredMixin, TemplateView):
@@ -27,23 +46,57 @@ class NewsletterCreateView(LoginRequiredMixin, CreateView):
     template_name = 'newsletter/newsletter_form.html'
     success_url = reverse_lazy('newsletter:newsletter_list')
 
+    def form_valid(self, form):
+        newsletter = form.save()
+        user = self.request.user
+        newsletter.user = user
+        newsletter.save()
+        return super().form_valid(form)
 
-class NewsletterDetailView(LoginRequiredMixin, DetailView):
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['clients'].queryset = Client.objects.filter(user=self.request.user)
+        form.fields['message'].queryset = Message.objects.filter(user=self.request.user)
+        return form
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+
+class NewsletterDetailView(LoginRequiredMixin, UserIsOwnerOrHasPermissionMixin, DetailView):
     model = Newsletter
     template_name = 'newsletter/newsletter.html'
 
+    def get(self, request, *args, **kwargs):
+        if not self.test_func():
+            return self.handle_no_permission()
+        return super().get(request, *args, **kwargs)
 
-class NewsletterUpdateView(LoginRequiredMixin, UpdateView):
+
+class NewsletterUpdateView(LoginRequiredMixin, UserIsOwnerOrHasPermissionMixin, UpdateView):
     model = Newsletter
     form_class = NewsletterForm
+    permission_required = 'newsletter.update_newsletter'
     template_name = 'newsletter/newsletter_form.html'
     success_url = reverse_lazy('newsletter:newsletter_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
-class NewsletterDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+
+class NewsletterDeleteView(LoginRequiredMixin, UserIsOwnerOrHasPermissionMixin, DeleteView):
     model = Newsletter
     permission_required = 'newsletter.delete_newsletter'
     success_url = reverse_lazy('newsletter:newsletter_list')
+
+    def delete(self, request, *args, **kwargs):
+        if not self.test_func():
+            return self.handle_no_permission()
+        return super().delete(request, *args, **kwargs)
 
 
 # Client
@@ -59,23 +112,46 @@ class ClientCreateView(LoginRequiredMixin, CreateView):
     form_class = ClientForm
     success_url = reverse_lazy('newsletter:client_list')
 
+    def form_valid(self, form):
+        client = form.save()
+        user = self.request.user
+        client.user = user
+        client.save()
+        return super().form_valid(form)
 
-class ClientDetailView(LoginRequiredMixin, DetailView):
+
+class ClientDetailView(LoginRequiredMixin, UserIsOwnerOrHasPermissionMixin, DetailView):
     model = Client
     template_name = 'newsletter/client.html'
 
+    def get(self, request, *args, **kwargs):
+        if not self.test_func():
+            return self.handle_no_permission()
+        return super().get(request, *args, **kwargs)
 
-class ClientUpdateView(LoginRequiredMixin, UpdateView):
+
+class ClientUpdateView(LoginRequiredMixin, UserIsOwnerOrHasPermissionMixin, UpdateView):
     model = Client
-    fields = ['email', 'full_name', 'comment']
+    form_class = ClientForm
+    permission_required = 'newsletter.update_client'
     template_name = 'newsletter/client_form.html'
     success_url = reverse_lazy('newsletter:client_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
-class ClientDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+
+class ClientDeleteView(LoginRequiredMixin, UserIsOwnerOrHasPermissionMixin, DeleteView):
     model = Client
     permission_required = 'newsletter.delete_client'
     success_url = reverse_lazy('newsletter:client_list')
+
+    def delete(self, request, *args, **kwargs):
+        if not self.test_func():
+            return self.handle_no_permission()
+        return super().delete(request, *args, **kwargs)
 
 
 # Message
@@ -91,31 +167,51 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
     form_class = MessageForm
     success_url = reverse_lazy('newsletter:message_list')
 
+    def form_valid(self, form):
+        message = form.save()
+        user = self.request.user
+        message.user = user
+        message.save()
+        return super().form_valid(form)
 
-class MessageDetailView(LoginRequiredMixin, DetailView):
+
+class MessageDetailView(LoginRequiredMixin, UserIsOwnerOrHasPermissionMixin, DetailView):
     model = Message
     template_name = 'newsletter/message.html'
 
+    def get(self, request, *args, **kwargs):
+        if not self.test_func():
+            return self.handle_no_permission()
+        return super().get(request, *args, **kwargs)
 
-class MessageUpdateView(LoginRequiredMixin, UpdateView):
+
+class MessageUpdateView(LoginRequiredMixin, UserIsOwnerOrHasPermissionMixin, UpdateView):
     model = Message
-    fields = ['topic', 'content']
+    form_class = MessageForm
+    permission_required = 'newsletter.update_message'
     success_url = reverse_lazy('newsletter:message_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
-class MessageDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+
+class MessageDeleteView(LoginRequiredMixin, UserIsOwnerOrHasPermissionMixin, DeleteView):
     model = Message
     permission_required = 'newsletter.delete_message'
     success_url = reverse_lazy('newsletter:message_list')
 
+    def delete(self, request, *args, **kwargs):
+        if not self.test_func():
+            return self.handle_no_permission()
+        return super().delete(request, *args, **kwargs)
 
-    # def form_valid(self, form):
-    #     product = form.save()
-    #     user = self.request.user
-    #     product.salesman = user
-    #     product.save()
-    #     return super().form_valid(form)
 
+class AttemptListView(ListView):
+    model = Attempt
+    template_name = 'newsletter/attempt_list.html'
+    context_object_name = 'attempts'
 
 
     # def get_context_data(self, **kwargs):

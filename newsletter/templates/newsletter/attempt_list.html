@@ -1,0 +1,27 @@
+{% extends 'newsletter/base.html' %}
+
+{% block content %}
+<h2>Newsletter Sending Attempts</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Newsletter</th>
+            <th>Client</th>
+            <th>Last Attempt Time</th>
+            <th>Status</th>
+            <th>Server Response</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for attempt in attempts %}
+        <tr>
+            <td>{{ attempt.newsletter.message }}</td>
+            <td>{{ attempt.client }}</td>
+            <td>{{ attempt.last_attempt_time }}</td>
+            <td>{{ attempt.get_last_attempt_status_display }}</td>
+            <td>{{ attempt.server_response }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

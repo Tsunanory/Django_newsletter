@@ -9,10 +9,12 @@
             </div>
             <div class="card-body">
                 <h4 class="my-0 font-weight-normal">{{ message.content }}</h4> <br>
-                </br>
+            </br>
                 <h5 class="card-title pricing-card-title">{{ client.comment }}</h5>
+                {% if user.is_authenticated and user == newsletter.user %}
                 <a href="{% url 'newsletter:update_message' message.id %}" type="button"
                    class="btn btn-lg btn-block btn-outline-primary">Изменить</a>
+                {% endif %}
             </div>
         </div>
     </div>

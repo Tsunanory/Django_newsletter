@@ -1,16 +1,24 @@
-from django.utils import timezone
-from apscheduler.schedulers.background import BackgroundScheduler
+from django.core.management.base import BaseCommand, CommandError
 from django.apps import apps
-from django_apscheduler.jobstores import DjangoJobStore
-from django.core.mail import send_mail
-
-from config.settings import EMAIL_HOST_USER
 import logging
 
 logger = logging.getLogger(__name__)
 
+class Command(BaseCommand):
+    help = 'Send a newsletter to all clients'
+
+    def add_arguments(self, parser):
+        parser.add_argument('newsletter_id', type=int, help='ID of the newsletter to send')
+
+    def handle(self, *args, **kwargs):
+        newsletter_id = kwargs['newsletter_id']
+        send_newsletter(newsletter_id)
 
 def send_newsletter(newsletter_id):
+    from django.utils import timezone
+    from django.core.mail import send_mail
+    from config.settings import EMAIL_HOST_USER
+
     Newsletter = apps.get_model('newsletter', 'Newsletter')
     Attempt = apps.get_model('newsletter', 'Attempt')
     try:
@@ -28,6 +36,7 @@ def send_newsletter(newsletter_id):
                 Attempt.objects.create(
                     newsletter=newsletter,
                     client=client,
+                    message=newsletter.message,
                     last_attempt_time=timezone.now(),
                     last_attempt_status='S',
                     server_response=200
@@ -37,6 +46,7 @@ def send_newsletter(newsletter_id):
                 Attempt.objects.create(
                     newsletter=newsletter,
                     client=client,
+                    message=newsletter.message,
                     last_attempt_time=timezone.now(),
                     last_attempt_status='F',
                     server_response=500
@@ -47,22 +57,10 @@ def send_newsletter(newsletter_id):
 
     except Newsletter.DoesNotExist:
         logger.error(f"Newsletter {newsletter_id} does not exist")
-        pass
+        raise CommandError(f'Newsletter with id {newsletter_id} does not exist')
 
     except Exception as e:
         newsletter.status = 'F'
         newsletter.save()
         logger.error(f"Error sending newsletter {newsletter_id}: {e}")
-
-
-def start_scheduler():
-    from apscheduler.schedulers.background import BackgroundScheduler
-    from django_apscheduler.jobstores import DjangoJobStore
-
-    scheduler = BackgroundScheduler()
-    scheduler.add_jobstore(DjangoJobStore(), "default")
-    scheduler.start()
-    return scheduler
-
-
-scheduler = start_scheduler()
+        raise CommandError(f"Error sending newsletter {newsletter_id}: {e}")

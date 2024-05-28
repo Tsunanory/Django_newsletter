@@ -25,12 +25,14 @@
 
             </ul>
             <div class="btn-group">
+                {% if user.is_authenticated and user == message.user %}
                 <a href="{% url 'newsletter:message_page' message.id %}" type="button"
                    class="btn btn-lg btn-block btn-outline-primary">Просмотреть</a>
                 <a href="{% url 'newsletter:update_message' message.id %}" type="button"
                    class="btn btn-lg btn-block btn-outline-primary">Изменить</a>
                 <a href="{% url 'newsletter:delete_message' message.id %}" type="button"
                    class="btn btn-lg btn-block btn-outline-primary">Удалить</a>
+                {% endif %}
             </div>
         </div>
     </div>

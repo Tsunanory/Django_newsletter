@@ -4,7 +4,7 @@
 {% block content %}
 <div class="col-12 mb-5">
     {% if user.is_authenticated %}
-     <h4 class="card-title pricing-card-title">Добавить:</h4>
+    <h4 class="card-title pricing-card-title">Добавить:</h4>
     <a class="btn btn-outline-primary" href="{% url 'newsletter:create_newsletter' %}">Рассылку</a>
     <a class="btn btn-outline-primary" href="{% url 'newsletter:create_client' %}">Клиента</a>
     <a class="btn btn-outline-primary" href="{% url 'newsletter:create_message' %}">Сообщение</a>
@@ -27,12 +27,14 @@
 
             </ul>
             <div class="btn-group">
+                {% if user.is_authenticated and user == client.user %}
                 <a href="{% url 'newsletter:client_page' client.id %}" type="button"
                    class="btn btn-lg btn-block btn-outline-primary">Просмотреть</a>
                 <a href="{% url 'newsletter:update_client' client.id %}" type="button"
                    class="btn btn-lg btn-block btn-outline-primary">Изменить</a>
                 <a href="{% url 'newsletter:delete_client' client.id %}" type="button"
                    class="btn btn-lg btn-block btn-outline-primary">Удалить</a>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -61,7 +61,7 @@ class UserResetPasswordView(PasswordResetView):
             user.save()
             send_mail(
                 subject="Восстановление пароля",
-                message=f"Ваш пароль от сайта Shop изменен:\n"
+                message=f"Ваш пароль от сайта News.com изменен:\n"
                         f"Email: {email}\n"
                         f"Пароль: {password}",
                 from_email=DEFAULT_FROM_EMAIL,
