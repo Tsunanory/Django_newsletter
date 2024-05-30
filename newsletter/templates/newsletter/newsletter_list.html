@@ -3,46 +3,80 @@
 
 {% block content %}
 <div class="col-12 mb-5">
-    {% if user.is_authenticated %}
-    <h4 class="card-title pricing-card-title">Добавить:</h4>
-    <a class="btn btn-outline-primary" href="{% url 'newsletter:create_newsletter' %}">Рассылку</a>
-    <a class="btn btn-outline-primary" href="{% url 'newsletter:create_client' %}">Клиента</a>
-    <a class="btn btn-outline-primary" href="{% url 'newsletter:create_message' %}">Сообщение</a>
-    {% endif %}
-</div>
-{% for newsletter in object_list %}
-<div class="col-8">
-    <div class="card mb-4 box-shadow">
-        <div class="card-header">
-            <h4 class="my-0 font-weight-normal">{{ newsletter.initial }}</h4>
-        </div>
-        <div class="card-body">
-            <h1 class="card-title pricing-card-title">{{ newsletter.message.topic }}</h1>
-            <ul class="list-unstyled mt-3 mb-4 text-start m-3">
-                <li style="text-align: center;">{{ newsletter.message.content|truncatechars:100 }}</li>
-                <br>
-                {% if user.is_authenticated and user == newsletter.user %}
-                {% for client in newsletter.clients.all %}
-                <li style="text-align: center;">{{ client }}</li>
-                {% endfor %}
-                {% endif %}
-
-
-            </ul>
-            <div class="btn-group">
-                {% if user == newsletter.user or perms.newsletter.can_view_any_newsletter %}
-                <a href="{% url 'newsletter:newsletter_page' newsletter.id %}" type="button"
-                   class="btn btn-lg btn-block btn-outline-primary">Просмотреть</a>
-                {% endif %}
-                {% if user == newsletter.user %}
-                <a href="{% url 'newsletter:update_newsletter' newsletter.id %}" type="button"
-                   class="btn btn-lg btn-block btn-outline-primary">Изменить</a>
-                <a href="{% url 'newsletter:delete_newsletter' newsletter.id %}" type="button"
-                   class="btn btn-lg btn-block btn-outline-primary">Удалить</a>
-                {% endif %}
+    <div class="row">
+        <div class="col-8">
+            <div class="mb-4">
+                <h2>Статистика</h2>
+                <ul>
+                    <li>Количество рассылок всего: {{ total_newsletters }}</li>
+                    <li>Количество активных рассылок: {{ active_newsletters }}</li>
+                    <li>Количество уникальных клиентов: {{ unique_clients }}</li>
+                </ul>
             </div>
+            {% if user.is_authenticated %}
+            <h4 class="card-title pricing-card-title">Добавить:</h4>
+            <a class="btn btn-outline-primary" href="{% url 'newsletter:create_newsletter' %}">Рассылку</a>
+            <a class="btn btn-outline-primary" href="{% url 'newsletter:create_client' %}">Клиента</a>
+            <a class="btn btn-outline-primary" href="{% url 'newsletter:create_message' %}">Сообщение</a>
+            {% endif %}
+
+            {% for newsletter in newsletters %}
+            <div class="card mb-4 box-shadow">
+                <div class="card-header">
+                    {% if newsletter.end_date %}
+                    <h4 class="my-0 font-weight-normal">{{ newsletter.initial }} - {{newsletter.end_date}}</h4>
+                    {% else %}
+                    <h4 class="my-0 font-weight-normal">{{ newsletter.initial }}</h4>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h1 class="card-title pricing-card-title">{{ newsletter.message.topic }}</h1>
+                    <ul class="list-unstyled mt-3 mb-4 text-start m-3">
+                        <li style="text-align: center;">{{ newsletter.message.content|truncatechars:100 }}</li>
+                        <br>
+                        {% if user.is_authenticated and user == newsletter.user %}
+                        {% for client in newsletter.clients.all %}
+                        <li style="text-align: center;">{{ client }}</li>
+                        {% endfor %}
+                        {% endif %}
+                    </ul>
+                    <div class="btn-group">
+                        {% if user == newsletter.user or perms.newsletter.can_view_any_newsletter %}
+                        <a href="{% url 'newsletter:newsletter_page' newsletter.id %}" type="button"
+                           class="btn btn-lg btn-block btn-outline-primary">Просмотреть</a>
+                        {% endif %}
+                        {% if user == newsletter.user %}
+                        <a href="{% url 'newsletter:update_newsletter' newsletter.id %}" type="button"
+                           class="btn btn-lg btn-block btn-outline-primary">Изменить</a>
+                        <a href="{% url 'newsletter:delete_newsletter' newsletter.id %}" type="button"
+                           class="btn btn-lg btn-block btn-outline-primary">Удалить</a>
+                        {% endif %}
+                        {% if newsletter.finished %}
+                        <span class="btn btn-lg btn-block btn-outline-secondary">Завершено</span>
+                        {% else %}
+                        <a href="{% url 'newsletter:newsletter_finish' newsletter.id %}" type="button"
+                           class="btn btn-lg btn-block btn-outline-danger">Завершить</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="col-4">
+            <h2>Случайные статьи</h2>
+            {% for post in random_posts %}
+            <div class="card mb-4 box-shadow">
+                <div class="card-header">
+                    <h4 class="my-0 font-weight-normal">{{ post.title }}</h4>
+                </div>
+                <div class="card-body">
+                    <p>{{ post.content|truncatewords:20 }}</p>
+                    <img src="{{ post.preview.url }}" alt="{{ post.title }}" class="img-fluid">
+                    <a href="{% url 'blog:post_detail' post.pk %}" class="btn btn-primary">Читать далее</a>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 </div>
-{% endfor %}
 {% endblock %}

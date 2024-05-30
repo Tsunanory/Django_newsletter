@@ -28,6 +28,10 @@ class NewsletterForm(FormStyleMixin, forms.ModelForm):
                 'type': 'datetime-local',
                 'class': 'form-control'
             }),
+            'end_date': forms.DateTimeInput(attrs={
+                'type': 'datetime-local',
+                'class': 'form-control'
+            }),
             'frequency': forms.Select(choices=[('Daily', 'Daily'), ('Weekly', 'Weekly'), ('Monthly', 'Monthly')],
                                       attrs={'class': 'form-control'}),
             'message': forms.Select(attrs={'class': 'form-control'}),
@@ -59,3 +63,9 @@ class MessageForm(FormStyleMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+
+
+class NewsletterFinishForm(forms.ModelForm):
+    class Meta:
+        model = Newsletter
+        fields = ['finished']

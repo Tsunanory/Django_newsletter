@@ -1,14 +1,15 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.forms import inlineformset_factory
+import random
 from django.urls import reverse_lazy
-import pytz
+from django.utils import timezone
 from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView, DeleteView
 
-from newsletter.forms import NewsletterForm, ClientForm, MessageForm
+from blog.models import Post
+from newsletter.forms import NewsletterForm, ClientForm, MessageForm, NewsletterFinishForm
 from newsletter.models import Newsletter, Client, Message, Attempt
 import logging
-
+from newsletter.services import get_newsletters_from_cache
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,37 @@ class ContactsTemplateView(LoginRequiredMixin, TemplateView):
 
 class NewsletterListView(ListView):
     model = Newsletter
-    template_name = 'newsletter/newsletter_list.html'
+    template_name = 'newsletter/main_page.html'
+    context_object_name = 'newsletters'
+
+    def get_queryset(self):
+        return get_newsletters_from_cache()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        now = timezone.now()
+
+        total_newsletters = Newsletter.objects.count()
+
+        active_newsletters = Newsletter.objects.filter(
+            initial__lte=now,
+            end_date__gte=now,
+            finished=False
+        ).count()
+
+        unique_clients = Client.objects.distinct().count()
+
+        all_posts = list(Post.objects.all())
+        random_posts = random.sample(all_posts, min(len(all_posts), 3))
+
+        context.update({
+            'total_newsletters': total_newsletters,
+            'active_newsletters': active_newsletters,
+            'unique_clients': unique_clients,
+            'random_posts': random_posts
+        })
+
+        return context
 
 
 class NewsletterCreateView(LoginRequiredMixin, CreateView):
@@ -215,38 +246,9 @@ class AttemptListView(ListView):
     context_object_name = 'attempts'
 
 
-    # def get_context_data(self, **kwargs):
-    #     context_data = super().get_context_data(**kwargs)
-    #     ProductFormset = inlineformset_factory(Product, Version, VersionForm, extra=1)
-    #     if self.request.method == 'POST':
-    #         context_data['formset'] = ProductFormset(self.request.POST, instance=self.object)
-    #     else:
-    #         context_data['formset'] = ProductFormset(instance=self.object)
-    #     return context_data
-
-    # def form_valid(self, form):
-    #     context_data = self.get_context_data()
-    #     formset = context_data['formset']
-    #     if form.is_valid() and formset.is_valid():
-    #         self.object = form.save()
-    #         formset.instance = self.object
-    #         formset.save()
-    #         return super().form_valid(form)
-    #     else:
-    #         return self.render_to_response(self.get_context_data(form=form, formset=formset))
-
-    # def get_form_class(self):
-    #     user = self.request.user
-    #     if user == self.object.salesman:
-    #         return ProductForm
-    #     if user.has_perm('newsletter.set_published'):
-    #         return ProductModeratorForm
-    #     raise PermissionDenied
-
-
-
-
-# class VersionCreateView(LoginRequiredMixin, CreateView):
-#     model = Version
-#     form_class = ProductForm
-#     success_url = reverse_lazy('newsletter:product_list')
+class NewsletterFinishView(PermissionRequiredMixin, UpdateView):
+    model = Newsletter
+    form_class = NewsletterFinishForm
+    template_name = 'newsletter/newsletter_finish_form.html'
+    success_url = reverse_lazy('newsletter:newsletter_list')
+    permission_required = 'newsletter.can_turn_the_newsletter_off'

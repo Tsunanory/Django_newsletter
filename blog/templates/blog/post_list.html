@@ -12,8 +12,11 @@
             <div class="card-body">
                 <h5 class="card-title pricing-card-title">{{ post.content }}</h5>
                 <img
-                    src="{{ post.preview|mymedia }}"
-                    alt="Product image">
+                        src="{{ post.preview|mymedia }}"
+                        alt="Product image">
             </div>
+        </div>
+    </div>
     {% endfor %}
+</div>
 {% endblock %}

@@ -8,4 +8,3 @@ from blog.models import Post
 class AdminPost(admin.ModelAdmin):
     list_display = ('id', 'title', 'content', )
     search_fields = ('id', 'title', 'content', )
-    # list_filter = ('is_active', )

@@ -23,6 +23,14 @@
                 </ul>
                 <a href="{% url 'newsletter:update_newsletter' newsletter.id %}" type="button"
                    class="btn btn-lg btn-block btn-outline-primary">Изменить</a>
+                {% if perms.newsletter.can_turn_the_newsletter_off %}
+                {% if newsletter.finished %}
+                <span class="btn btn-lg btn-block btn-outline-secondary">Завершено</span>
+                {% else %}
+                <a href="{% url 'newsletter:newsletter_finish' newsletter.id %}" type="button"
+                   class="btn btn-lg btn-block btn-outline-danger">Завершить</a>
+                {% endif %}
+                {% endif %}
             </div>
         </div>
     </div>

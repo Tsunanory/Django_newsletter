@@ -1,6 +1,7 @@
 import logging
 import pytz
 from django.db import models
+from django.utils import timezone
 from django_apscheduler.models import DjangoJob
 
 from users.models import User
@@ -50,6 +51,7 @@ class Newsletter(models.Model):
         ('M', 'Monthly'),
     ]
     initial = models.DateTimeField(verbose_name='начало рассылки')
+    end_date = models.DateTimeField(verbose_name='конец рассылки', **NULLABLE)
     finished = models.BooleanField(default=False, verbose_name='завершено')
     frequency = models.CharField(max_length=2, choices=FREQ_OPTIONS, default='W', verbose_name='частота рассылки')
     status = models.CharField(max_length=2, choices=STATUS, default='P', verbose_name='статус')
@@ -82,6 +84,10 @@ class Newsletter(models.Model):
             )
             logger.info(f"Scheduled new job {job_id} to run at {self.initial.astimezone(pytz.UTC)}")
 
+    def is_active(self):
+        now = timezone.now()
+        return self.initial <= now <= self.end_date and not self.finished
+
     class Meta:
         verbose_name = 'рассылка'              
         verbose_name_plural = 'рассылки'
@@ -97,7 +103,8 @@ class Newsletter(models.Model):
         ]
 
     def __str__(self):
-        return str(self.initial)
+        return (f'From {str(self.initial)[:-9]}'
+                f' to {str(self.end_date)[:-9]}') if self.end_date else f'From {str(self.initial)[:-9]}'
 
 
 class Attempt(models.Model):
