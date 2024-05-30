@@ -1,0 +1,27 @@
+{% extends "newsletter/base.html" %}
+
+{% block content %}
+<h2>User List</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Email</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for user in users %}
+    <tr>
+        <td>{{ user.email }}</td>
+        <td>
+            {% if user.is_active %}
+            <a class="btn btn-danger" href="{% url 'users:block_user_confirm' user.id %}">Block</a>
+            {% else %}
+            Blocked
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

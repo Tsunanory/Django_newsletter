@@ -5,7 +5,10 @@
         <a class="p-2 text-dark" href="{% url 'newsletter:newsletter_list' %}">Рассылки</a>
         <a class="p-2 text-dark" href="{% url 'newsletter:client_list' %}">Клиенты</a>
         <a class="p-2 text-dark" href="{% url 'newsletter:message_list' %}">Сообщения</a>
-         <a class="p-2 text-dark" href="{% url 'newsletter:attempt_list' %}">Отчеты</a>
+        <a class="p-2 text-dark" href="{% url 'newsletter:attempt_list' %}">Отчеты</a>
+        {% if perms.users.can_see_all_the_users %}
+        <a class="p-2 text-dark" href="{% url 'users:user_list' %}">Пользователи</a>
+        {% endif %}
         {% endif %}
         <a class="p-2 text-dark" href="#">Оплата и гарантии</a>
         <a class="p-2 text-dark" href="{% url 'blog:post_list' %}">Блог</a>

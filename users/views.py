@@ -1,15 +1,15 @@
 import random
 import secrets
 import string
-
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.views import PasswordResetView
 from django.core.mail import send_mail
 from django.http import HttpResponseRedirect, request
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
-from django.views.generic import CreateView
-
+from django.views.generic import CreateView, ListView, View, TemplateView
+from django.contrib import messages
 from config.settings import EMAIL_HOST_USER, DEFAULT_FROM_EMAIL
 from users.forms import UserRegisterForm, RecoveryForm
 from users.models import User
@@ -71,3 +71,42 @@ class UserResetPasswordView(PasswordResetView):
         else:
             return HttpResponseRedirect(reverse('users:registration'))
 
+
+class UserListView(PermissionRequiredMixin, ListView):
+    model = User
+    template_name = 'users/user_list.html'
+    context_object_name = 'users'
+    permission_required = 'users.can_see_all_the_users'
+
+    def get_queryset(self):
+        return User.objects.all()
+
+
+class BlockUserConfirmView(PermissionRequiredMixin, TemplateView):
+    template_name = 'users/block_user_confirm.html'
+    permission_required = 'users.can_block_users'
+    success_url = reverse_lazy('users:user_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = get_object_or_404(User, pk=kwargs['pk'])
+        context['user_to_block'] = user
+        return context
+
+    def post(self, request, *args, **kwargs):
+        user = get_object_or_404(User, pk=kwargs['pk'])
+        user.is_active = False
+        user.save()
+        messages.success(request, f'User {user.email} has been blocked.')
+        return redirect('users:user_list')
+
+
+class BlockUserView(PermissionRequiredMixin, View):
+    permission_required = 'users.can_block_users'
+
+    def post(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        user.is_active = False
+        user.save()
+        messages.success(request, f'User {user.email} has been blocked.')
+        return redirect('users:user_list')

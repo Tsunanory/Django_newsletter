@@ -67,6 +67,7 @@ class NewsletterCreateView(LoginRequiredMixin, CreateView):
 
 class NewsletterDetailView(LoginRequiredMixin, UserIsOwnerOrHasPermissionMixin, DetailView):
     model = Newsletter
+    permission_required = 'newsletter.can_view_any_newsletter'
     template_name = 'newsletter/newsletter.html'
 
     def get(self, request, *args, **kwargs):

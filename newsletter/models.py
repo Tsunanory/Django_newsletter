@@ -50,6 +50,7 @@ class Newsletter(models.Model):
         ('M', 'Monthly'),
     ]
     initial = models.DateTimeField(verbose_name='начало рассылки')
+    finished = models.BooleanField(default=False, verbose_name='завершено')
     frequency = models.CharField(max_length=2, choices=FREQ_OPTIONS, default='W', verbose_name='частота рассылки')
     status = models.CharField(max_length=2, choices=STATUS, default='P', verbose_name='статус')
     message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name='сообщение')
